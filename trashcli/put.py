@@ -62,6 +62,7 @@ class TrashPutCmd:
             return e.code
         else:
             if options.verbose: logger.be_verbose()
+            if options.debug: logger.be_debug()
             if options.trashdir:
                 self.trashdir = options.trashdir
 
@@ -110,6 +111,10 @@ Report bugs to https://github.com/andreafrancia/trash-cli/issues""")
                           action="store_true",
                           dest="verbose",
                           help="Verbose log output")
+        parser.add_option("--debug",
+                          action="store_true",
+                          dest="debug",
+                          help="Debug log output")
         original_print_help = parser.print_help
         def patched_print_help():
             original_print_help(self.stdout)
@@ -312,8 +317,15 @@ class MyLogger:
         self.program_name = program_name
         self.stderr=stderr
         self.verbose = False
+        self.debugLog = False
     def be_verbose(self):
         self.verbose = True
+    def be_debug(self):
+        self.debugLog = True
+        self.verbose = True
+    def debug(self,message):
+        if self.debugLog:
+            self.emit(message)
     def info(self,message):
         if self.verbose:
             self.emit(message)
@@ -346,13 +358,13 @@ class TrashPutReporter:
         self.logger.info("'%s' trashed in %s" % (trashee,
                                                  shrinkuser(trash_directory)))
     def found_unsercure_trash_dir_symlink(self, trash_dir_path):
-        self.logger.info("found unsecure .Trash dir (should not be a symlink): %s"
+        self.logger.debug("found unsecure .Trash dir (should not be a symlink): %s"
                 % trash_dir_path)
     def invalid_top_trash_is_not_a_dir(self, trash_dir_path):
-        self.logger.info("found unusable .Trash dir (should be a dir): %s"
+        self.logger.debug("found unusable .Trash dir (should be a dir): %s"
                 % trash_dir_path)
     def found_unsecure_trash_dir_unsticky(self, trash_dir_path):
-        self.logger.info("found unsecure .Trash dir (should be sticky): %s"
+        self.logger.debug("found unsecure .Trash dir (should be sticky): %s"
                 % trash_dir_path)
     def unable_to_trash_file_in_because(self,
                                         file_to_be_trashed,
@@ -360,7 +372,7 @@ class TrashPutReporter:
         self.logger.info("Failed to trash %s in %s, because :%s" % (
            file_to_be_trashed, shrinkuser(trash_directory), error))
     def trash_dir_with_volume(self, trash_dir_path, volume_path):
-        self.logger.info("Trash-dir: %s from volume: %s" % (trash_dir_path,
+        self.logger.debug("Trash-dir: %s from volume: %s" % (trash_dir_path,
                                                             volume_path))
     def exit_code(self):
         if not self.some_file_has_not_be_trashed:
@@ -368,7 +380,7 @@ class TrashPutReporter:
         else:
             return EX_IOERR
     def volume_of_file(self,volume):
-        self.logger.info("Volume of file: %s" % volume)
+        self.logger.debug("Volume of file: %s" % volume)
 
 def parent_realpath(path):
     parent = os.path.dirname(path)
