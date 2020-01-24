@@ -109,7 +109,7 @@ Report bugs to https://github.com/andreafrancia/trash-cli/issues""")
                           "--verbose",
                           action="store_true",
                           dest="verbose",
-                          help="explain what is being done")
+                          help="Verbose log output")
         original_print_help = parser.print_help
         def patched_print_help():
             original_print_help(self.stdout)
