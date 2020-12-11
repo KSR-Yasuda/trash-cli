@@ -66,6 +66,7 @@ class TrashPutCmd:
             if options.trashdir:
                 self.trashdir = options.trashdir
 
+            self.ignore_missing = options.ignore_missing
             self.reporter = TrashPutReporter(logger)
             self.logger = trash_logger
             self.trash_all(args)
@@ -95,7 +96,8 @@ Report bugs to https://github.com/andreafrancia/trash-cli/issues""")
                           help="ignored (for GNU rm compatibility)")
         parser.add_option("-f", "--force",
                           action="store_true",
-                          help="ignored (for GNU rm compatibility)")
+                          dest="ignore_missing",
+                          help="silently ignore nonexistent files")
         parser.add_option("-i", "--interactive",
                           action="store_true",
                           help="ignored (for GNU rm compatibility)")
@@ -153,6 +155,9 @@ Report bugs to https://github.com/andreafrancia/trash-cli/issues""")
 
         if self._should_skipped_by_specs(file):
             self.reporter.unable_to_trash_dot_entries(file)
+            return
+
+        if self.ignore_missing and not os.access(file, os.F_OK):
             return
 
         volume_of_file_to_be_trashed = self.volume_of_parent(file)
@@ -274,6 +279,7 @@ class GlobalTrashCan(TrashPutCmd):
         self.parent_path       = parent_path
         self.realpath          = realpath
         self.logger            = logger
+        self.ignore_missing    = False
 
 def describe(path):
     """
@@ -369,7 +375,7 @@ class TrashPutReporter:
     def unable_to_trash_file_in_because(self,
                                         file_to_be_trashed,
                                         trash_directory, error):
-        self.logger.info("Failed to trash %s in %s, because :%s" % (
+        self.logger.info("Failed to trash %s in %s, because: %s" % (
            file_to_be_trashed, shrinkuser(trash_directory), error))
     def trash_dir_with_volume(self, trash_dir_path, volume_path):
         self.logger.debug("Trash-dir: %s from volume: %s" % (trash_dir_path,
